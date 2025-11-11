@@ -1,6 +1,7 @@
 import pickle
 import streamlit as st
 import requests
+import time
 
 # ----------------------------
 # Fetch movie poster function
@@ -83,7 +84,7 @@ st.markdown("""
             font-size: 1rem;
         }
 
-        /* Footer (Your Name) */
+        /* Footer */
         .footer {
             text-align: center;
             margin-top: 60px;
@@ -95,6 +96,28 @@ st.markdown("""
             color: #BB86FC;
             font-weight: bold;
         }
+
+        /* Loader styling */
+        .loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+
+        .loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #BB86FC;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -104,7 +127,9 @@ st.markdown("""
 st.markdown("<h1 class='main-title'>🎬 Movie Recommender System</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>Find your next favorite movie — powered by Machine Learning!</p>", unsafe_allow_html=True)
 
+# ----------------------------
 # Load data
+# ----------------------------
 movies = pickle.load(open('movies.pkl', 'rb'))
 similarity = pickle.load(open('similarity.pkl', 'rb'))
 
@@ -112,10 +137,31 @@ similarity = pickle.load(open('similarity.pkl', 'rb'))
 movie_list = movies['title'].values
 selected_movie = st.selectbox("🎞️ Type or select a movie from the dropdown", movie_list)
 
-# Show recommendations
+# ----------------------------
+# Show Recommendations with Custom Loader
+# ----------------------------
 if st.button('✨ Show Recommendations'):
+    # Create placeholder for loader
+    loader_placeholder = st.empty()
+
+    # Display custom loader in the center
+    loader_placeholder.markdown("""
+        <div class='loader-container'>
+            <div class='loader'></div>
+        </div>
+        <p style='text-align:center; color:#BB86FC;'>🔍 Fetching best recommendations for you...</p>
+    """, unsafe_allow_html=True)
+
+    # Simulate loading delay (you can adjust)
+    time.sleep(2)
+
+    # Fetch recommendations
     recommended_movie_names, recommended_movie_posters = recommend(selected_movie)
-    
+
+    # Remove loader
+    loader_placeholder.empty()
+
+    # Show recommendations
     cols = st.columns(5)
     for col, name, poster in zip(cols, recommended_movie_names, recommended_movie_posters):
         with col:
@@ -126,5 +172,12 @@ if st.button('✨ Show Recommendations'):
                 </div>
             """, unsafe_allow_html=True)
 
-# Footer - Your Name
+    # Success message (auto hide after 3 seconds)
+    success_placeholder = st.success('✅ Recommendations loaded successfully!')
+    time.sleep(2)
+    success_placeholder.empty()
+
+# ----------------------------
+# Footer
+# ----------------------------
 st.markdown("<div class='footer'>🎥 Created with ❤️ by <span>Manish Kumar</span></div>", unsafe_allow_html=True)
